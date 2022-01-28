@@ -77,7 +77,22 @@ const displayMovements = movements => {
     containerMovements.insertAdjacentHTML('afterbegin', html);
   });
 };
+
 displayMovements(account1.movements);
+
+const createUsernames = function (accs) {
+  accs.forEach(acc => {
+    acc.username = acc.owner
+      .toLowerCase()
+      .split(' ')
+      .map(element => element[0])
+      .join('');
+  });
+};
+
+const user = 'Lalo Mayida';
+createUsernames(accounts);
+console.log(accounts);
 
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
@@ -90,5 +105,3 @@ const currencies = new Map([
 ]);
 
 const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
-
-/////////////////////////////////////////////////
