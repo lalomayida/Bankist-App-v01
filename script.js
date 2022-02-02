@@ -62,10 +62,12 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-const displayMovements = movements => {
+const displayMovements = (movements, sort = false) => {
   containerMovements.innerHTML = '';
 
-  movements.forEach((mov, i) => {
+  const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
+
+  movs.forEach((mov, i) => {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
     const html = `
     <div class="movements__row">
@@ -171,6 +173,19 @@ btnTransfer.addEventListener('click', event => {
   inputTransferAmount.blur();
 });
 
+btnLoan.addEventListener('click', event => {
+  event.preventDefault();
+  const amount = Number(inputLoanAmount.value);
+
+  if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
+    //Add Movement
+    currentAccount.movements.push(amount);
+
+    //Update UI
+    updateUI(currentAccount);
+  }
+});
+
 btnClose.addEventListener('click', event => {
   event.preventDefault();
 
@@ -187,73 +202,116 @@ btnClose.addEventListener('click', event => {
   inputCloseUsername.value = inputClosePin.value = '';
 });
 
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-// LECTURES
+let sorted = false;
 
-// const currencies = new Map([
-//   ['USD', 'United States dollar'],
-//   ['EUR', 'Euro'],
-//   ['GBP', 'Pound sterling'],
-// ]);
+btnSort.addEventListener('click', event => {
+  event.preventDefault();
+  displayMovements(currentAccount.movements, !sorted);
+  sorted = !sorted;
+});
 
-// const deposits = movements.filter(mov => mov > 0);
-// console.log(deposits);
+// This Is a Nice Title
 
-// const withdrawals = movements.filter(mov => mov < 0);
-// console.log(withdrawals);
+const convertTitleCase = title => {
+  const exeptions = ['a', 'an', 'and', 'the', 'but', 'or', 'on', 'in', 'with'];
 
-///////////////////////////////////////
-// Coding Challenge #2
-
-/* 
-Let's go back to Julia and Kate's study about dogs. This time, they want to convert dog ages to human ages and calculate the average age of the dogs in their study.
-Create a function 'calcAverageHumanAge', which accepts an arrays of dog's ages ('ages'), and does the following things in order:
-1. Calculate the dog age in human years using the following formula: if the dog is <= 2 years old, humanAge = 2 * dogAge. If the dog is > 2 years old, humanAge = 16 + dogAge * 4.
-2. Exclude all dogs that are less than 18 human years old (which is the same as keeping dogs that are at least 18 years old)
-3. Calculate the average human age of all adult dogs (you should already know from other challenges how we calculate averages 😉)
-4. Run the function for both test datasets
-TEST DATA 1: [5, 2, 4, 1, 15, 8, 3]
-TEST DATA 2: [16, 6, 10, 5, 6, 1, 4]
-GOOD LUCK 😀
-*/
-
-function calcAverageHumanAge(ages) {
-  const adultDogs = ages
-    .map(age => (age <= 2 ? 2 * age : 16 + age * 4)) //Converting to human
-    .filter(age => age >= 18); //Just dogs over 18
-
-  const average = adultDogs.reduce(
-    (sum, dogAge, i, arr) => sum + dogAge / arr.length,
-    0
-  );
-
-  console.log(average);
-}
-
-// calcAverageHumanAge([5, 2, 4, 1, 15, 8, 3]);
-// calcAverageHumanAge([16, 6, 10, 5, 6, 1, 4]);
-
-///////////////////////////////////////
-// Coding Challenge #3
-
-/* 
-Rewrite the 'calcAverageHumanAge' function from the previous challenge, but this time as an arrow function, and using chaining!
-
-TEST DATA 1: [5, 2, 4, 1, 15, 8, 3]
-TEST DATA 2: [16, 6, 10, 5, 6, 1, 4]
-
-GOOD LUCK 😀
-*/
-
-const calcAverageHumanAge2 = ages => {
-  const average = ages
-    .map(age => (age <= 2 ? 2 * age : 16 + age * 4)) //Converting to human
-    .filter(age => age >= 18) //Just dogs over 18
-    .reduce((sum, dogAge, i, arr) => sum + dogAge / arr.length, 0); //Calculating average
-
-  console.log(average);
+  return title
+    .toLowerCase()
+    .split(' ')
+    .map(word =>
+      exeptions.includes(word)
+        ? word
+        : word.replace(word[0], word[0].toUpperCase())
+    )
+    .join(' ');
 };
 
-// calcAverageHumanAge2([5, 2, 4, 1, 15, 8, 3]);
-// calcAverageHumanAge2([16, 6, 10, 5, 6, 1, 4]);
+console.log(convertTitleCase('ThIs is a niCe title'));
+console.log(
+  convertTitleCase(
+    'ThIs is a niCe title with some others indicatiors and letters'
+  )
+);
+
+// Coding Challenge #4
+
+/* 
+Julia and Kate are still studying dogs, and this time they are studying if dogs are eating too much or too little.
+Eating too much means the dog's current food portion is larger than the recommended portion, and eating too little is the opposite.
+Eating an okay amount means the dog's current food portion is within a range 10% above and 10% below the recommended portion (see hint).
+1. Loop over the array containing dog objects, and for each dog, calculate the recommended food portion and add it to the object as a new property. Do NOT create a new array, simply loop over the array. Forumla: recommendedFood = weight ** 0.75 * 28. (The result is in grams of food, and the weight needs to be in kg)
+2. Find Sarah's dog and log to the console whether it's eating too much or too little. HINT: Some dogs have multiple owners, so you first need to find Sarah in the owners array, and so this one is a bit tricky (on purpose) 🤓
+3. Create an array containing all owners of dogs who eat too much ('ownersEatTooMuch') and an array with all owners of dogs who eat too little ('ownersEatTooLittle').
+4. Log a string to the console for each array created in 3., like this: "Matilda and Alice and Bob's dogs eat too much!" and "Sarah and John and Michael's dogs eat too little!"
+5. Log to the console whether there is any dog eating EXACTLY the amount of food that is recommended (just true or false)
+6. Log to the console whether there is any dog eating an OKAY amount of food (just true or false)
+7. Create an array containing the dogs that are eating an OKAY amount of food (try to reuse the condition used in 6.)
+8. Create a shallow copy of the dogs array and sort it by recommended food portion in an ascending order (keep in mind that the portions are inside the array's objects)
+HINT 1: Use many different tools to solve these challenges, you can use the summary lecture to choose between them 😉
+HINT 2: Being within a range 10% above and below the recommended portion means: current > (recommended * 0.90) && current < (recommended * 1.10). Basically, the current portion should be between 90% and 110% of the recommended portion.
+TEST DATA:
+const dogs = [
+  { weight: 22, curFood: 250, owners: ['Alice', 'Bob'] },
+  { weight: 8, curFood: 200, owners: ['Matilda'] },
+  { weight: 13, curFood: 275, owners: ['Sarah', 'John'] },
+  { weight: 32, curFood: 340, owners: ['Michael'] }
+];
+GOOD LUCK 😀
+*/
+
+const dogs = [
+  { weight: 22, curFood: 250, owners: ['Alice', 'Bob'] },
+  { weight: 8, curFood: 200, owners: ['Matilda'] },
+  { weight: 13, curFood: 275, owners: ['Sarah', 'John'] },
+  { weight: 32, curFood: 340, owners: ['Michael'] },
+];
+
+//1.- Calculate recomendedFood
+dogs.map(dog => (dog.recommendedFood = Math.trunc(dog.weight ** 0.75 * 28)));
+console.log(dogs);
+//2.- Find sarahs dog and tell if it is eating to little or too much
+const sarahDog = dogs.find(dog => dog.owners.includes('Sarah'));
+
+console.log(
+  `Sarah's dog is eating ${
+    sarahDog.curFood < sarahDog.recommendedFood ? 'too little' : 'too much'
+  }`
+);
+
+//3.- Array of owners per dog eating habits
+const ownersEatTooMuch = dogs
+  .filter(dog => dog.curFood > dog.recommendedFood)
+  .flatMap(dog => dog.owners);
+
+const ownersEatTooLittle = dogs
+  .filter(dog => dog.curFood < dog.recommendedFood)
+  .flatMap(dog => dog.owners);
+
+console.log(ownersEatTooLittle, ownersEatTooMuch);
+
+//4.- Log message
+console.log(`${ownersEatTooLittle.join(' and ')}'s dogs eat to little!`);
+console.log(`${ownersEatTooMuch.join(' and ')}'s dogs eat to much!`);
+
+//5.- Any dog eating exactly the recomended
+console.log(dogs.some(dog => dog.curFood === dog.recommendedFood));
+
+//6.- Within range
+
+const functionWithinRange = dog =>
+  dog.curFood > dog.recommendedFood * 0.9 &&
+  dog.curFood < dog.recommendedFood * 1.1;
+
+console.log(dogs.some(functionWithinRange));
+
+//7.- Array of dogs within range
+const filteredDogs = dogs.filter(functionWithinRange);
+console.log(filteredDogs);
+
+//8.- Create a  copy of the dogs array and sort it by recommended food portion in an ascending order
+
+const orderedDogs = dogs
+  .slice()
+  .sort((a, b) => a.recommendedFood - b.recommendedFood);
+
+console.log(orderedDogs);
