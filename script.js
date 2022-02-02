@@ -79,38 +79,33 @@ const displayMovements = movements => {
   });
 };
 
-displayMovements(account1.movements);
-
-const calcDisplayBalance = function (movements) {
-  const balance = movements.reduce((sum, mov) => sum + mov, 0);
-  labelBalance.textContent = `${balance} €`;
+const calcDisplayBalance = acc => {
+  const balance = acc.movements.reduce((sum, mov) => sum + mov, 0);
+  acc.balance = balance;
+  labelBalance.textContent = `${acc.balance} €`;
 };
 
-calcDisplayBalance(account1.movements);
-
-const calcDisplaySummary = function (movements) {
-  const incomes = movements
+const calcDisplaySummary = acc => {
+  const incomes = acc.movements
     .filter(mov => mov > 0)
     .reduce((acc, mov) => acc + mov, 0);
   labelSumIn.textContent = `${incomes} €`;
 
-  const outcomes = movements
+  const outcomes = acc.movements
     .filter(mov => mov < 0)
     .reduce((acc, mov) => acc + mov, 0);
   labelSumOut.textContent = `${Math.abs(outcomes)} €`;
 
-  const interest = movements
+  const interest = acc.movements
     .filter(mov => mov > 0)
-    .map(deposit => (deposit * 1.2) / 100) //Interest of 1.2%
+    .map(deposit => (deposit * acc.interestRate) / 100) //Interest of 1.2%
     .filter(interest => interest >= 1) //Applies only to interests over 1 eur
     .reduce((acc, mov) => acc + mov, 0);
 
   labelSumInterest.textContent = `${interest} €`;
 };
 
-calcDisplaySummary(account1.movements);
-
-const createUsernames = function (accs) {
+const createUsernames = accs => {
   accs.forEach(acc => {
     acc.username = acc.owner
       .toLowerCase()
@@ -122,7 +117,75 @@ const createUsernames = function (accs) {
 
 createUsernames(accounts);
 
-const eurToUsd = 1.1;
+const updateUI = account => {
+  displayMovements(account.movements);
+  calcDisplayBalance(account);
+  calcDisplaySummary(account);
+};
+
+let currentAccount;
+
+btnLogin.addEventListener('click', event => {
+  event.preventDefault();
+  currentAccount = accounts.find(
+    acc => acc.username === inputLoginUsername.value
+  );
+
+  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    //Display welcome message
+    labelWelcome.textContent = `Welcome back ${
+      currentAccount.owner.split(' ')[0]
+    }`;
+
+    //Set opacity to 100%
+    containerApp.style.opacity = 100;
+
+    //Empty form
+    inputLoginPin.value = inputLoginUsername.value = '';
+    inputLoginPin.blur();
+
+    //Display info
+    updateUI(currentAccount);
+  }
+});
+
+btnTransfer.addEventListener('click', event => {
+  event.preventDefault();
+  const amount = Number(inputTransferAmount.value);
+  const receiverAcc = accounts.find(
+    acc => acc.username === inputTransferTo.value
+  );
+
+  if (
+    amount > 0 &&
+    receiverAcc &&
+    currentAccount.balance >= amount &&
+    receiverAcc?.username !== currentAccount.username
+  ) {
+    currentAccount.movements.push(-amount);
+    receiverAcc.movements.push(amount);
+    updateUI(currentAccount);
+  }
+
+  inputTransferTo.value = inputTransferAmount.value = '';
+  inputTransferAmount.blur();
+});
+
+btnClose.addEventListener('click', event => {
+  event.preventDefault();
+
+  if (
+    currentAccount.username === inputCloseUsername.value &&
+    currentAccount.pin === Number(inputClosePin.value)
+  ) {
+    const index = accounts.findIndex(
+      acc => acc.username === currentAccount.username
+    );
+    accounts.splice(index, 1);
+    containerApp.style.opacity = 0;
+  }
+  inputCloseUsername.value = inputClosePin.value = '';
+});
 
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
@@ -168,5 +231,29 @@ function calcAverageHumanAge(ages) {
   console.log(average);
 }
 
-calcAverageHumanAge([5, 2, 4, 1, 15, 8, 3]);
-calcAverageHumanAge([16, 6, 10, 5, 6, 1, 4]);
+// calcAverageHumanAge([5, 2, 4, 1, 15, 8, 3]);
+// calcAverageHumanAge([16, 6, 10, 5, 6, 1, 4]);
+
+///////////////////////////////////////
+// Coding Challenge #3
+
+/* 
+Rewrite the 'calcAverageHumanAge' function from the previous challenge, but this time as an arrow function, and using chaining!
+
+TEST DATA 1: [5, 2, 4, 1, 15, 8, 3]
+TEST DATA 2: [16, 6, 10, 5, 6, 1, 4]
+
+GOOD LUCK 😀
+*/
+
+const calcAverageHumanAge2 = ages => {
+  const average = ages
+    .map(age => (age <= 2 ? 2 * age : 16 + age * 4)) //Converting to human
+    .filter(age => age >= 18) //Just dogs over 18
+    .reduce((sum, dogAge, i, arr) => sum + dogAge / arr.length, 0); //Calculating average
+
+  console.log(average);
+};
+
+// calcAverageHumanAge2([5, 2, 4, 1, 15, 8, 3]);
+// calcAverageHumanAge2([16, 6, 10, 5, 6, 1, 4]);
